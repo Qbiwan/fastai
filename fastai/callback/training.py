@@ -16,7 +16,11 @@ from .fp16 import *
 # Cell
 class ShortEpochCallback(Callback):
     "Fit just `pct` of an epoch, then stop"
-    def __init__(self,pct=0.01,short_valid=True): self.pct,self.short_valid = pct,short_valid
+    def __init__(self,
+        pct=0.01, # fit just this percentage of an epoch, then stop training.
+        short_valid=True # skip validation phase of an epoch if true.
+    ):
+        self.pct,self.short_valid = pct,short_valid
     def after_batch(self):
         if self.iter/self.n_iter < self.pct: return
         if self.training:    raise CancelTrainException
@@ -26,7 +30,10 @@ class ShortEpochCallback(Callback):
 class GradientAccumulation(Callback):
     "Accumulate gradients before updating weights"
     order,run_valid = MixedPrecision.order-4,False
-    def __init__(self, n_acc=32): store_attr()
+    def __init__(self,
+        n_acc=32 # accumulate the gradients until this effective batch size is reached, before updating weights.
+    ):
+        store_attr()
     def before_fit(self): self.count=0
     def after_loss(self): self.learn.loss_grad /= self.n_acc/find_bs(self.learn.yb)
     def before_step(self):
@@ -40,13 +47,20 @@ class GradientAccumulation(Callback):
 class GradientClip(Callback):
     "Clip norm of gradients"
     order=MixedPrecision.order+1
-    def __init__(self,max_norm:float=1., norm_type:float=2.0): store_attr()
+    def __init__(self,
+        max_norm:float=1., # max norm of the gradients.
+        norm_type:float=2.0 # type of gradient norm used; default is 2-norm (Euclidean distance).
+    ):
+        store_attr()
     def before_step(self): nn.utils.clip_grad_norm_(self.parameters(), self.max_norm, self.norm_type)
 
 # Cell
 bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
 
-def set_bn_eval(m:nn.Module, use_eval=True)->None:
+def set_bn_eval(
+    m:nn.Module,  #
+    use_eval=True #
+)->None:          #
     "Set bn layers in eval mode for all recursive children of `m`."
     for l in m.children():
         if isinstance(l, bn_types) and not next(l.parameters()).requires_grad:
