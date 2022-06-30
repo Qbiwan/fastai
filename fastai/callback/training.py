@@ -58,9 +58,9 @@ class GradientClip(Callback):
 bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
 
 def set_bn_eval(
-    m:nn.Module,  #
-    use_eval=True #
-)->None:          #
+    m:nn.Module,  # the module (usually the model) of which the batch-norm layers are to be frozen.
+    use_eval=True # evaluation mode (freeze batchnorm layers and their running stats) if true, else training mode
+)->None:          # None
     "Set bn layers in eval mode for all recursive children of `m`."
     for l in m.children():
         if isinstance(l, bn_types) and not next(l.parameters()).requires_grad:
