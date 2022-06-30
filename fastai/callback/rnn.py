@@ -30,7 +30,11 @@ class RNNCallback(Callback):
 class RNNRegularizer(Callback):
     "Add AR and TAR regularization"
     order,run_valid = RNNCallback.order+1,False
-    def __init__(self, alpha=0., beta=0.): store_attr()
+    def __init__(self,
+        alpha=0., # how much L2 regularization to apply on activations; higher alpha means stronger activation regularization.
+        beta=0. # how much L2 regularization to apply on difference in activations between adjacent time steps; higher beta means stronger temporal activation regularization.
+    ):
+        store_attr()
     def after_loss(self):
         if not self.training: return
         if self.alpha: self.learn.loss_grad += self.alpha * self.rnn.out.float().pow(2).mean()
@@ -39,7 +43,10 @@ class RNNRegularizer(Callback):
             if len(h)>1: self.learn.loss_grad += self.beta * (h[:,1:] - h[:,:-1]).float().pow(2).mean()
 
 # Cell
-def rnn_cbs(alpha=0., beta=0.):
+def rnn_cbs(
+    alpha=0., # how much L2 regularization to apply on activations; higher alpha means stronger activation regularization.
+    beta=0. # how much L2 regularization to apply on difference in activations between adjacent time steps; higher beta means stronger temporal activation regularization.
+):
     "All callbacks needed for (optionally regularized) RNN training"
     reg = [RNNRegularizer(alpha=alpha, beta=beta)] if alpha or beta else []
     return [ModelResetter(), RNNCallback()] + reg
